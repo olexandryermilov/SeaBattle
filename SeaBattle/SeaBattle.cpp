@@ -11,9 +11,9 @@
 using namespace std;
 
 char playerField[SIZE][SIZE], ñomputerSeenField[SIZE][SIZE], computerRealField[SIZE][SIZE],tempPlayerField[SIZE][SIZE];
+int playerShips = 4 * 1 + 3 * 2 + 2 * 3 + 1 * 4,computerShips = 4 * 1 + 3 * 2 + 2 * 3 + 1 * 4;
 
 void drawFields() {
-	system("cls");
 	for (int i = 0; i < SIZE+1; i++) {
 
 		if (i == 0) {
@@ -221,13 +221,133 @@ void initComputerRealField() {
 		}
 	}
 }
+bool isPlayerShipDead(int x, int y, int fromX, int fromY) {
+	if (isInside(x + 1, y) && playerField[x + 1][y] == '*') {
+		return false;
+	}
+	if (isInside(x - 1, y) && playerField[x - 1][y] == '*') {
+		return false;
+	}
+	if (isInside(x, y+1) && playerField[x][y+1] == '*') {
+		return false;
+	}
+	if (isInside(x, y - 1) && playerField[x][y - 1] == '*') {
+		return false;
+	}
+	if ((x+1!=fromX||y!=fromY)&&isInside(x + 1, y) && playerField[x + 1][y] == 'X') {
+		return isPlayerShipDead(x+1,y,x,y);
+	}
+	if ((x - 1 != fromX || y != fromY)&&isInside(x - 1, y) && playerField[x - 1][y] == 'X') {
+		return isPlayerShipDead(x - 1, y,x,y);
+	}
+	if ((x!= fromX || y+1 != fromY)&&isInside(x, y + 1) && playerField[x][y + 1] == 'X') {
+		return isPlayerShipDead(x, y+1,x,y);
+	}
+	if ((x != fromX || y - 1 != fromY)&&isInside(x, y - 1) && playerField[x][y - 1] == 'X') {
+		return isPlayerShipDead(x, y - 1,x,y);
+	}
+	return true;
+}
+bool isComputerShipDead(int x, int y,int fromX,int fromY) {
+	if (isInside(x + 1, y) && computerRealField[x+1][y]=='*'&& ñomputerSeenField[x + 1][y] != 'X') {
+		return false;
+	}
+	if (isInside(x - 1, y) && computerRealField[x - 1][y] == '*'&& ñomputerSeenField[x -1][y] != 'X') {
+		return false;
+	}
+	if (isInside(x, y + 1) && computerRealField[x][y+1] == '*'&& ñomputerSeenField[x][y+1] != 'X') {
+		return false;
+	}
+	if (isInside(x, y - 1) && computerRealField[x][y-1] == '*'&& ñomputerSeenField[x][y-1] != 'X') {
+		return false;
+	}
+	if ((x + 1 != fromX || y != fromY) && isInside(x + 1, y) && ñomputerSeenField[x + 1][y] == 'X') {
+		return isPlayerShipDead(x + 1, y, x, y);
+	}
+	if ((x - 1 != fromX || y != fromY) && isInside(x - 1, y) && ñomputerSeenField[x - 1][y] == 'X') {
+		return isPlayerShipDead(x - 1, y, x, y);
+	}
+	if ((x != fromX || y + 1 != fromY) && isInside(x, y + 1) && ñomputerSeenField[x][y + 1] == 'X') {
+		return isPlayerShipDead(x, y + 1, x, y);
+	}
+	if ((x != fromX || y - 1 != fromY) && isInside(x, y - 1) && ñomputerSeenField[x][y - 1] == 'X') {
+		return isPlayerShipDead(x, y - 1, x, y);
+	}
+	return true;
+}
 int main()
 {
+	setlocale(LC_ALL, "Russian");
 	initFields();
 	enterShips();
 	drawFields();
 	initComputerRealField();
-	drawComputerRealField();
+	//drawComputerRealField(); use it to check computer ships generation
+	while (playerShips > 0 && computerShips > 0) {
+		cout << "Ââåäèòå âàø õîä\n";
+		char letter;
+		int num;
+		cin >> letter >> num;
+		int y = letter - 'A';
+		int x = num-1;
+		if (!isInside(x, y)) {
+			cout << "Ìèìî ïîëÿ\n";
+			continue;
+		}
+		ñomputerSeenField[x][y] = computerRealField[x][y];
+		if (ñomputerSeenField[x][y] == '.') {
+			system("cls");
+			ñomputerSeenField[x][y] = 'M';
+			drawFields();
+			cout << "Ìèìî\n";
+		}
+		else if(ñomputerSeenField[x][y]=='*') {
+			ñomputerSeenField[x][y] = 'X';
+			system("cls");
+			drawFields();
+			if(!isComputerShipDead(x,y,-1,-1))cout << "Ðàíèë\n";
+			else cout << "Óáèë\n";
+			computerShips--;
+			continue;
+		}
+		x = -1;
+		y = -1;
+		while (x==-1||playerField[x][y] != '.') {
+			while (x==-1||playerField[x][y] == 'X' || playerField[x][y] == 'M') {
+				x = rand() % 10;
+				y = rand() % 10;
+			}
+			if (playerField[x][y] == '.') {
+				playerField[x][y] = 'M';
+				system("cls");
+				drawFields();
+				cout << "Êîìïüþòåð: Ìèìî\n";
+				_sleep(1000);
+				break;
+			}
+			else if (playerField[x][y] == '*') {
+				playerShips--;
+				playerField[x][y] = 'X';
+				system("cls");
+				drawFields();
+				if(!isPlayerShipDead(x,y,-1,-1))cout << "Êîìïüþòåð: ðàíèë\n";
+				else cout << "Êîìïüþòåð: óáèë\n";
+				_sleep(1000);
+				continue;
+			}
+		}
+	}
+
+	if (playerShips == 0) {
+		system("cls");
+		drawFields();
+		cout << "Âû ïðîèãðàëè!";
+	}
+	else {
+		system("cls");
+		drawFields();
+		cout << "Âû âûèãðàëè!";
+	}
 	system("pause");
     return 0;
 }
