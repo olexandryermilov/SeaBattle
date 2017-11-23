@@ -5,7 +5,7 @@
 #include <iostream>
 #include <ctime>
 #include <conio.h>
-
+#include <string>
 #define SIZE 10
 
 using namespace std;
@@ -67,14 +67,14 @@ void drawTempPlayerField() {
 			cout << "\n";
 	}
 }
-void copyPlayerField(bool to) {
+void copyFieldToField(char from[][10], char to[][10]) {
 	for (int i = 0; i < SIZE; i++) {
 		for (int j = 0; j < SIZE; j++) {
-			if(to)tempPlayerField[i][j] = playerField[i][j];
-			else playerField[i][j] = tempPlayerField[i][j];
+			to[i][j] = from[i][j];
 		}
 	}
 }
+
 
 bool isInside(int tx, int ty) {
 	return !(tx < 0 || tx >= SIZE || ty >= SIZE || ty < 0);
@@ -156,7 +156,7 @@ void enterShips() {
 		for (int j = 1; j <= 4 - i + 1; j++) {
 			cout << "Enter ship of size " << i<<"\n";
 			int x = 0, y = 0,orientation = 0;
-			copyPlayerField(true);
+			copyFieldToField(playerField,tempPlayerField);
 			for (int p = 0; p < i; p++) {
 				tempPlayerField[x + p*(1 - orientation)][y + p*orientation] = '*';
 			}
@@ -176,13 +176,13 @@ void enterShips() {
 							cout << "Bad position\n";
 							continue;
 						}
-						copyPlayerField(false);
+						copyFieldToField(tempPlayerField,playerField);
 						system("cls");
 						break;
 					}
 					system("cls");
 					cout << "Enter ship of size " << i << "\n";
-					copyPlayerField(true);
+					copyFieldToField(playerField, tempPlayerField);
 					for (int p = 0; p < i; p++) {
 						tempPlayerField[x + p*(1 - orientation)][y + p*orientation] = '*';
 					}
@@ -277,21 +277,31 @@ bool isComputerShipDead(int x, int y,int fromX,int fromY) {
 }
 int main()
 {
-	setlocale(LC_ALL, "Russian");
 	initFields();
 	enterShips();
 	drawFields();
 	initComputerRealField();
 	//drawComputerRealField(); use it to check computer ships generation
 	while (playerShips > 0 && computerShips > 0) {
-		cout << "Ââåäèòå âàø õîä\n";
+		cout << "Your move:\n";
 		char letter;
 		int num;
-		cin >> letter >> num;
+		string move;
+		cin >> move;
+		if (move.length() != 2) {
+			cout << "Bad move!\n";
+			continue;
+		}
+		letter = move[0];
+		num = move[1] - '0';
+		if (num > 10 || num<0 || letter>'K' || letter < 'A') {
+			cout << "Bad move!\n";
+			continue;
+		}
 		int y = letter - 'A';
 		int x = num-1;
 		if (!isInside(x, y)) {
-			cout << "Ìèìî ïîëÿ\n";
+			cout << "Outside the range\n";
 			continue;
 		}
 		ñomputerSeenField[x][y] = computerRealField[x][y];
@@ -299,14 +309,14 @@ int main()
 			system("cls");
 			ñomputerSeenField[x][y] = 'M';
 			drawFields();
-			cout << "Ìèìî\n";
+			cout << "Past\n";
 		}
 		else if(ñomputerSeenField[x][y]=='*') {
 			ñomputerSeenField[x][y] = 'X';
 			system("cls");
 			drawFields();
-			if(!isComputerShipDead(x,y,-1,-1))cout << "Ðàíèë\n";
-			else cout << "Óáèë\n";
+			if(!isComputerShipDead(x,y,-1,-1))cout << "Hit!\n";
+			else cout << "Killed\n";
 			computerShips--;
 			continue;
 		}
@@ -321,7 +331,7 @@ int main()
 				playerField[x][y] = 'M';
 				system("cls");
 				drawFields();
-				cout << "Êîìïüþòåð: Ìèìî\n";
+				cout << "Computer: Past\n";
 				_sleep(1000);
 				break;
 			}
@@ -330,8 +340,8 @@ int main()
 				playerField[x][y] = 'X';
 				system("cls");
 				drawFields();
-				if(!isPlayerShipDead(x,y,-1,-1))cout << "Êîìïüþòåð: ðàíèë\n";
-				else cout << "Êîìïüþòåð: óáèë\n";
+				if(!isPlayerShipDead(x,y,-1,-1))cout << "Computer: hit\n";
+				else cout << "Computer: killed\n";
 				_sleep(1000);
 				continue;
 			}
@@ -341,12 +351,12 @@ int main()
 	if (playerShips == 0) {
 		system("cls");
 		drawFields();
-		cout << "Âû ïðîèãðàëè!";
+		cout << "You lost!";
 	}
 	else {
 		system("cls");
 		drawFields();
-		cout << "Âû âûèãðàëè!";
+		cout << "Yow won!";
 	}
 	system("pause");
     return 0;
